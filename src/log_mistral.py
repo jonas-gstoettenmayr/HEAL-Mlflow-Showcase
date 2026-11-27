@@ -48,7 +48,32 @@ tools = [
 ]
 with mlflow.start_run():
     
-    messages = [{"role": "user", "content": "Where is my order A-1042?"}]
+    system_prompt = """\
+You are a friendly helper for order checking using your order tool.
+
+Answer in this template: Hello friend, thank you for asking your order: "{order_id}" is
+currently in status: "{status}".
+
+If the status is "shipped" say "It will arrive soon. Enjoy!", if the status is "in preparation" say "Apologies for the delay!"
+    """
+    
+    mlflow.genai.register_prompt(
+        name="systemprompt",
+        template = system_prompt,
+        # Optional: Provide a commit message to describe the changes
+        commit_message="Initial commit",
+        # Optional: Specify tags for this prompt
+        tags={
+            "author": "jonas@example.com",
+            "task": "Helping the user",
+            "language": "en",
+        },
+    )
+    
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": "Where is my order A-1042?"}
+    ]
 
     # 1. The model reads the question and asks for get_order_status.
     response = client.chat.complete(model="mistral-small-latest", messages=messages, tools=tools)
