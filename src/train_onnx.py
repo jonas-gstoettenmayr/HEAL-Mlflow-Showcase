@@ -1,8 +1,10 @@
-"""CLI wrapper for training: fit y = k*x + d, export to ONNX, register in MLflow.
+"""Train a linear regression on a constant target y = <value>, export it to
+ONNX and register it in the MLflow Model Registry as 'TheAnswer'.
+
+Logs to experiment 'showcase' on the server configured in heal_mlflow_showcase.config.
 
 Usage:
-    uv run the-answer-train [K] [D]      # defaults: k=0, d=42 (constant 42)
-    uv run python -m heal_mlflow_showcase.train [K] [D]
+    uv run python src/train_onnx.py <value>      # e.g. 42
 """
 import argparse
 
@@ -36,7 +38,7 @@ def evaluate_regressen(y_true: ndarray, y_pred: ndarray):
     return metrics
 
 def train_linear(value: int) -> None:
-    """Parse [K] [D] from args and train + register the model."""
+    """Fit LinearRegression on the constant target y=value, export to ONNX, register as MODEL_NAME."""
     with mlflow.start_run():
         
         #train model

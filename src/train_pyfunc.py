@@ -1,3 +1,12 @@
+"""Train a grid-searched DecisionTreeClassifier pipeline on the synthetic
+proposer/budget/status dataset and register it as 'Decider'.
+
+Generates src/data/data.csv on first run; logs train/test datasets and a
+classifier evaluation to experiment 'search' on the server from heal_mlflow_showcase.config.
+
+Usage:
+    uv run python src/train_pyfunc.py
+"""
 import mlflow
 import mlflow.sklearn as skflow
 import pandas as pd

@@ -1,3 +1,12 @@
+"""Fetch the newest registered 'TheAnswer' version via the MLflow REST API,
+download its ONNX file through the server's artifact proxy and run one
+onnxruntime prediction. No MLflow client needed.
+
+Run src/train_onnx.py first.
+
+Usage:
+    uv run python src/serve_through_api.py
+"""
 from datetime import datetime
 
 import numpy as np
@@ -26,6 +35,7 @@ print(
 
 #find model uri path
 version= metadata['version']
+# version= "latest"
 response = requests.get(
     MLFLOW_URI+f"/mlflow/model-versions/get-download-uri?name={REGISTRY}&version={version}"
 )

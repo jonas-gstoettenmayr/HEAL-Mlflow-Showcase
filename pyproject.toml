@@ -1,6 +1,6 @@
 [project]
 name = "heal-mlflow-showcase"
-version = "0.1.1"
+version = "0.1.2"
 description = "Short MLflow showcase"
 readme = "README.md"
 requires-python = ">=3.14"
