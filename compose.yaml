@@ -1,0 +1,77 @@
+# .env are not nice for windows
+# so using yaml variables instead
+x-vars:
+  pg_user: &pg_user mlflow
+  pg_password: &pg_password mlflow
+  pg_db: &pg_db mlflow
+  pg_port: &pg_port "5432"
+  pg_ports: &pg_ports "5432:5432"
+  backend_uri: &backend_uri postgresql://mlflow:mlflow@postgres:5432/mlflow
+  mlflow_host: &mlflow_host 0.0.0.0
+  mlflow_port: &mlflow_port "5000"
+  mlflow_ports: &mlflow_ports "5000:5000"
+
+volumes:
+  pgdata:
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: mlflow-postgres
+    environment:
+      POSTGRES_USER: *pg_user
+      POSTGRES_PASSWORD: *pg_password
+      POSTGRES_DB: *pg_db
+      PGPORT: *pg_port
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - *pg_ports
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -p $$PGPORT"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: mlflow-server
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Backend store URI
+      MLFLOW_BACKEND_STORE_URI: *backend_uri
+
+      # Server host/port
+      MLFLOW_HOST: *mlflow_host
+      MLFLOW_PORT: *mlflow_port
+    command:
+      - /bin/bash
+      - -c
+      - |
+        pip install --no-cache-dir psycopg2-binary
+        mlflow server \
+          --backend-store-uri "$$MLFLOW_BACKEND_STORE_URI" \
+          --artifacts-destination /mlflow/artifacts \
+          --serve-artifacts \
+          --host "$$MLFLOW_HOST" \
+          --port "$$MLFLOW_PORT"
+    ports:
+      - *mlflow_ports
+    volumes:
+      # link the folder where MLflow saves its runs/artifacts to a local folder
+      - ./mlflow-artifacts:/mlflow/artifacts
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:$$MLFLOW_PORT/health')\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+networks:
+  default:
+    name: mlflow-network
